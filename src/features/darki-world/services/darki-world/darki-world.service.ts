@@ -1,6 +1,8 @@
-import { Page } from "puppeteer";
+import { ElementHandle, Page } from "puppeteer";
 import puppeteerService from "../../../../core/puppeteer/services/puppeteer/puppeteer.service.js";
 import { Media, MediaType } from "../../types/darki-world.types.js";
+import darkiWorldMediaTypeService from "../darki-world-media-type/darki-world-media-type.service.js";
+import elementService from "../../../../shared/element/services/element/element.service.js";
 
 class DarkiWorldService {
   private readonly siteUrl = "https://darkiworld.org/";
@@ -38,15 +40,9 @@ class DarkiWorldService {
       visible: true,
     });
 
-    const mediasTypes = await this.getMediasTypesInSearchResultPage();
-    console.log(mediasTypes);
+    const films = await this.getFilmsInSearchPageResult();
 
-    //On récupère tous les éléments qui contienent le titre de chaque films/series/etc... résultant de la recherche
-    const mediasTitles = await page.$$eval(mediasElementsSelector, (elements) =>
-      elements.map((el) => el.innerHTML)
-    );
-
-    return mediasTitles;
+    return films ?? [];
   }
 
   //TODO
@@ -54,20 +50,85 @@ class DarkiWorldService {
     return true;
   }
 
-  private async getMediasTypesInSearchResultPage(): Promise<MediaType[]> {
+  private async getFilmsInSearchPageResult(): Promise<string[] | undefined> {
     const page = await this.getPageInstance();
-    if (!this.isPageOnSearchResultPage()) return [];
+    if (!this.isPageOnSearchResultPage()) {
+      return;
+    }
 
-    const mediasTypesSelector = "section h2";
-    await page.waitForSelector(mediasTypesSelector, {
-      visible: true,
-    });
+    const mediasTypesElementsHandles =
+      await darkiWorldMediaTypeService.getMediasTypesElementsInSearchResultPage(
+        page
+      );
 
-    const mediasTypes = await page.$$eval(mediasTypesSelector, (elements) =>
-      elements.map((el) => el.innerHTML)
+    // const filmMediaTypeElementHandle = mediasTypesElementsHandles.find(
+    //   async (el) => {
+    //     const mediaType =
+    //       await darkiWorldMediaTypeService.getMediaTypeNameInMediaTypeElementHandle(
+    //         el
+    //       );
+    //     console.log(mediaType);
+    //     return mediaType === "Film";
+    //   }
+    // )
+    let filmMediaTypeElementHandle;
+    for (
+      let i = 0;
+      i < mediasTypesElementsHandles.length || !filmMediaTypeElementHandle;
+      ++i
+    ) {
+      const el = mediasTypesElementsHandles[i];
+      const mediaType =
+        await darkiWorldMediaTypeService.getMediaTypeNameInMediaTypeElementHandle(
+          el
+        );
+      if (mediaType === "Film") {
+        filmMediaTypeElementHandle = el;
+      }
+    }
+    if (!filmMediaTypeElementHandle) {
+      return;
+    }
+
+    const filmMediaTypeElementHandleNode =
+      filmMediaTypeElementHandle.asElement();
+    if (!filmMediaTypeElementHandleNode) {
+      return;
+    }
+
+    const sectionElementOfFilmMediaTypeElement =
+      await elementService.searchParentElementNodeWithCssSelector(
+        "section.mb-20",
+        filmMediaTypeElementHandleNode
+      );
+
+    if (!sectionElementOfFilmMediaTypeElement) {
+      return;
+    }
+
+    const containerOfFilm = sectionElementOfFilmMediaTypeElement;
+    // const containerOfFilmAsHandle =
+    //   await sectionElementOfFilmMediaTypeElement.getProperty("parentElement");
+    // const containerOfFilm = containerOfFilmAsHandle.asElement();
+    // if (!containerOfFilm) {
+    //   return;
+    // }
+
+    const mediasElementsSelector = ".content-grid-portrait .text-sm a";
+    const filmTitlesElementsHandles = await containerOfFilm.$$(
+      mediasElementsSelector
     );
 
-    return mediasTypes as MediaType[];
+    const filmTitles = await Promise.all(
+      filmTitlesElementsHandles.map(
+        async (filmTitleElementHandle) =>
+          await elementService.getElementHandleInnerHTMlValue(
+            filmTitleElementHandle
+          )
+      )
+    );
+
+    return filmTitles;
   }
 }
 export default new DarkiWorldService();
