@@ -1,4 +1,4 @@
-import puppeteer, { Browser, Page } from "puppeteer";
+import puppeteer, { Browser, ElementHandle, Locator, Page } from "puppeteer";
 
 class Puppeteer {
   private browser?: Browser;
