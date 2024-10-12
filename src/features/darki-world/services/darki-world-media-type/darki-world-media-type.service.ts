@@ -1,5 +1,5 @@
 import { ElementHandle, Page } from "puppeteer";
-import { MediaType } from "../../types/darki-world.types.js";
+import { Media, MediaType } from "../../types/darki-world.types.js";
 import elementService from "../../../../shared/element/services/element/element.service.js";
 
 class DarkiWorldMediaTypeService {

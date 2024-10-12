@@ -3,6 +3,7 @@ import puppeteerService from "../../../../core/puppeteer/services/puppeteer/pupp
 import { Media, MediaType } from "../../types/darki-world.types.js";
 import darkiWorldMediaTypeService from "../darki-world-media-type/darki-world-media-type.service.js";
 import elementService from "../../../../shared/element/services/element/element.service.js";
+import darkiWorldMediaService from "../darki-world-media/darki-world-media.service.js";
 
 class DarkiWorldService {
   private readonly siteUrl = "https://darkiworld.org/";
@@ -40,9 +41,14 @@ class DarkiWorldService {
       visible: true,
     });
 
-    const films = await this.getFilmsInSearchPageResult();
+    const medias = (await this.getMediasInSearchPageResult()) ?? [];
+    console.log(medias);
 
-    return films ?? [];
+    const flatMedias = medias.flatMap((mediasByMediaType) => mediasByMediaType);
+
+    const mediasTitles =
+      darkiWorldMediaService.mapMediasToMediaTitle(flatMedias);
+    return mediasTitles ?? [];
   }
 
   //TODO
@@ -50,7 +56,7 @@ class DarkiWorldService {
     return true;
   }
 
-  private async getFilmsInSearchPageResult(): Promise<string[] | undefined> {
+  private async getMediasInSearchPageResult(): Promise<Media[][] | undefined> {
     const page = await this.getPageInstance();
     if (!this.isPageOnSearchResultPage()) {
       return;
@@ -61,52 +67,62 @@ class DarkiWorldService {
         page
       );
 
-    // const filmMediaTypeElementHandle = mediasTypesElementsHandles.find(
-    //   async (el) => {
-    //     const mediaType =
-    //       await darkiWorldMediaTypeService.getMediaTypeNameInMediaTypeElementHandle(
-    //         el
-    //       );
-    //     console.log(mediaType);
-    //     return mediaType === "Film";
-    //   }
-    // )
-    let filmMediaTypeElementHandle;
-    for (
-      let i = 0;
-      i < mediasTypesElementsHandles.length || !filmMediaTypeElementHandle;
-      ++i
-    ) {
+    let mediaTypesElementsHandle: ElementHandle<HTMLHeadingElement>[] = [];
+    for (let i = 0; i < mediasTypesElementsHandles.length; ++i) {
       const el = mediasTypesElementsHandles[i];
+
+      mediaTypesElementsHandle.push(el);
+    }
+    if (!mediaTypesElementsHandle.length) {
+      return;
+    }
+
+    let medias: Media[][] = [];
+    for (let i = 0; i < mediasTypesElementsHandles.length; ++i) {
+      const mediaTypeElementHandle = mediasTypesElementsHandles[i];
+
       const mediaType =
         await darkiWorldMediaTypeService.getMediaTypeNameInMediaTypeElementHandle(
-          el
+          mediaTypeElementHandle
         );
-      if (mediaType === "Film") {
-        filmMediaTypeElementHandle = el;
+
+      const mediaTitles = await this.getTitlesOfMediaElement(
+        mediaTypeElementHandle
+      );
+      if (!mediaTitles) {
+        return;
       }
+
+      const mediasOfMediaType: Media[] = mediaTitles.map((mediaTitle) => ({
+        title: mediaTitle,
+        type: mediaType,
+      }));
+
+      medias.push(mediasOfMediaType);
     }
-    if (!filmMediaTypeElementHandle) {
+
+    return medias;
+  }
+
+  async getTitlesOfMediaElement(
+    mediaTypeElementHandle: ElementHandle<HTMLHeadingElement>
+  ): Promise<string[] | undefined> {
+    const mediaTypeElementHandleNode = mediaTypeElementHandle.asElement();
+    if (!mediaTypeElementHandleNode) {
       return;
     }
 
-    const filmMediaTypeElementHandleNode =
-      filmMediaTypeElementHandle.asElement();
-    if (!filmMediaTypeElementHandleNode) {
-      return;
-    }
-
-    const sectionElementOfFilmMediaTypeElement =
+    const sectionElementOfMediaTypeElement =
       await elementService.searchParentElementNodeWithCssSelector(
         "section.mb-20",
-        filmMediaTypeElementHandleNode
+        mediaTypeElementHandleNode
       );
 
-    if (!sectionElementOfFilmMediaTypeElement) {
+    if (!sectionElementOfMediaTypeElement) {
       return;
     }
 
-    const containerOfFilm = sectionElementOfFilmMediaTypeElement;
+    const containerOfMediaType = sectionElementOfMediaTypeElement;
     // const containerOfFilmAsHandle =
     //   await sectionElementOfFilmMediaTypeElement.getProperty("parentElement");
     // const containerOfFilm = containerOfFilmAsHandle.asElement();
@@ -115,20 +131,20 @@ class DarkiWorldService {
     // }
 
     const mediasElementsSelector = ".content-grid-portrait .text-sm a";
-    const filmTitlesElementsHandles = await containerOfFilm.$$(
+    const mediaTitlesElementsHandles = await containerOfMediaType.$$(
       mediasElementsSelector
     );
 
-    const filmTitles = await Promise.all(
-      filmTitlesElementsHandles.map(
-        async (filmTitleElementHandle) =>
+    const mediaTitles = await Promise.all(
+      mediaTitlesElementsHandles.map(
+        async (mediaTitleElementHandle) =>
           await elementService.getElementHandleInnerHTMlValue(
-            filmTitleElementHandle
+            mediaTitleElementHandle
           )
       )
     );
 
-    return filmTitles;
+    return mediaTitles;
   }
 }
 export default new DarkiWorldService();
