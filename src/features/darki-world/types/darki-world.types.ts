@@ -16,3 +16,9 @@ export interface Media {
   url: string;
   // urlElement: Locator<HTMLAnchorElement>;
 }
+
+export type MediasByTypes = {
+  [mediaType in MediaType]: Media[];
+};
+
+export interface MediaInfos {}

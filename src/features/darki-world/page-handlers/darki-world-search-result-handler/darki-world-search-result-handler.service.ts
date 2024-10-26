@@ -1,5 +1,5 @@
 import { ElementHandle, Page } from "puppeteer";
-import { Media } from "../../types/darki-world.types.js";
+import { Media, MediasByTypes } from "../../types/darki-world.types.js";
 import darkiWorldMediaTypeService from "../../services/darki-world-media-type/darki-world-media-type.service.js";
 import elementService from "../../../../shared/element/services/element/element.service.js";
 
@@ -10,7 +10,7 @@ class DarkiWorldSearchResultHandlerService {
   async getSearchMediasResult(
     searchQuery: string,
     page: Page
-  ): Promise<Media[][]> {
+  ): Promise<MediasByTypes> {
     //Récupération de l'input de recherche dans la apge
     const searchInputQueryPathSelector = ".items-center input";
     const searchInputElement = await page.locator(searchInputQueryPathSelector);
@@ -28,7 +28,26 @@ class DarkiWorldSearchResultHandlerService {
     });
 
     const medias = (await this.getMediasInSearchPageResult(page)) ?? [];
-    return medias;
+
+    const mediasByTypes = medias.reduce<MediasByTypes>(
+      (currMediasByTypes, mediasOfCurrType) => {
+        if (!mediasOfCurrType.length) {
+          return currMediasByTypes;
+        }
+
+        const currType = mediasOfCurrType[0].type;
+        if (!currMediasByTypes[currType]) {
+          currMediasByTypes[currType] = [];
+        }
+
+        currMediasByTypes[currType].push(...mediasOfCurrType);
+
+        return currMediasByTypes;
+      },
+      {} as MediasByTypes
+    );
+
+    return mediasByTypes;
   }
 
   //TODO

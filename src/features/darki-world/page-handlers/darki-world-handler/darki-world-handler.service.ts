@@ -2,7 +2,12 @@ import { Page } from "puppeteer";
 import puppeteerService from "../../../../core/puppeteer/services/puppeteer/puppeteer.service.js";
 import darkiWorldSearchResultHandlerService from "../darki-world-search-result-handler/darki-world-search-result-handler.service.js";
 import darkiWorldMediaService from "../../services/darki-world-media/darki-world-media.service.js";
-import { Media } from "../../types/darki-world.types.js";
+import {
+  Media,
+  MediaInfos,
+  MediasByTypes,
+} from "../../types/darki-world.types.js";
+import darkiWorldMediaHandlerService from "../darki-world-media-handler/darki-world-media-handler.service.js";
 
 class DarkiWorldHandlerService {
   private readonly siteUrl = "https://darkiworld.org/";
@@ -21,7 +26,7 @@ class DarkiWorldHandlerService {
     return page;
   }
 
-  async searchMedias(searchQuery: string): Promise<Media[][]> {
+  async searchMedias(searchQuery: string): Promise<MediasByTypes> {
     const page = await this.getPageInstance();
 
     const medias =
@@ -34,11 +39,10 @@ class DarkiWorldHandlerService {
   }
 
   async searchMediasTitles(searchQuery: string): Promise<string[]> {
-    const page = await this.getPageInstance();
+    const mediasByTypes = await this.searchMedias(searchQuery);
 
-    const medias = await this.searchMedias(searchQuery);
-
-    const flatMedias = medias.flatMap((mediasByMediaType) => mediasByMediaType);
+    const mediasByTypesEntries = Object.entries(mediasByTypes);
+    const flatMedias = mediasByTypesEntries.flatMap(([type, medias]) => medias);
 
     const mediasTitles =
       darkiWorldMediaService.mapMediasToMediaTitle(flatMedias);
@@ -46,6 +50,12 @@ class DarkiWorldHandlerService {
     return mediasTitles ?? [];
   }
 
-  async getAvailableDownloadInfosOfMedia(media: Media): Promise<any> {}
+  async getAvailableDownloadInfosOfMedia(media: Media): Promise<MediaInfos> {
+    const mediaInfos = await darkiWorldMediaHandlerService.getPageMediaInfos(
+      media
+    );
+
+    return mediaInfos;
+  }
 }
 export default new DarkiWorldHandlerService();
