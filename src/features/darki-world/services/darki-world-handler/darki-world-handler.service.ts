@@ -1,11 +1,11 @@
 import { ElementHandle, Page } from "puppeteer";
 import puppeteerService from "../../../../core/puppeteer/services/puppeteer/puppeteer.service.js";
-import { Media, MediaType } from "../../types/darki-world.types.js";
+import { Media } from "../../types/darki-world.types.js";
 import darkiWorldMediaTypeService from "../darki-world-media-type/darki-world-media-type.service.js";
 import elementService from "../../../../shared/element/services/element/element.service.js";
 import darkiWorldMediaService from "../darki-world-media/darki-world-media.service.js";
 
-class DarkiWorldService {
+class DarkiWorldHandlerService {
   private readonly siteUrl = "https://darkiworld.org/";
   private pageInstance?: Page;
 
@@ -147,4 +147,4 @@ class DarkiWorldService {
     return mediaTitles;
   }
 }
-export default new DarkiWorldService();
+export default new DarkiWorldHandlerService();

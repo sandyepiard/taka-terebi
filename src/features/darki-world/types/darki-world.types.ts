@@ -4,6 +4,7 @@ export const mediaTypes = [
   "Animes",
   "Ebook",
   "Games",
+  "Personnes",
 ] as const;
 export type MediaType = (typeof mediaTypes)[number];
 
