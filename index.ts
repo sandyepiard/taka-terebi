@@ -1,9 +1,9 @@
 import puppeteerService from "./src/core/puppeteer/services/puppeteer/puppeteer.service.js";
 import allDebridHandlerService from "./src/features/all-debrid/services/all-debrid-handler/all-debrid-handler.service.js";
-import darkiWorldHandlerService from "./src/features/darki-world/services/darki-world-handler/darki-world-handler.service.js";
+import darkiWorldHandlerService from "./src/features/darki-world/page-handlers/darki-world-handler/darki-world-handler.service.js";
 
-const batmanSearchResults = await darkiWorldHandlerService.searchMediasTitles(
-  "adibou"
+const batmanSearchResults = await darkiWorldHandlerService.searchMedias(
+  "batman"
 );
 console.log(batmanSearchResults);
 // const leechedLink = await allDebridHandlerService.leechUrl(

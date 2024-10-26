@@ -10,6 +10,15 @@ class ElementService {
     return innerHTMLAsJSHandleAsStr;
   }
 
+  async getElementHandleHrefValue(
+    elementHandle: ElementHandle<any>
+  ): Promise<string> {
+    const hrefAsJSHandle = await elementHandle.getProperty("href");
+
+    const hrefAsJSHandleAsStr = await hrefAsJSHandle.jsonValue();
+    return hrefAsJSHandleAsStr;
+  }
+
   async searchParentElementNodeWithCssSelector(
     cssSelector: string,
     element: ElementHandle<Node>

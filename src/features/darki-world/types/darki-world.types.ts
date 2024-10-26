@@ -1,3 +1,5 @@
+import { Locator } from "puppeteer";
+
 export const mediaTypes = [
   "Série",
   "Film",
@@ -11,4 +13,6 @@ export type MediaType = (typeof mediaTypes)[number];
 export interface Media {
   title: string;
   type: MediaType;
+  url: string;
+  // urlElement: Locator<HTMLAnchorElement>;
 }

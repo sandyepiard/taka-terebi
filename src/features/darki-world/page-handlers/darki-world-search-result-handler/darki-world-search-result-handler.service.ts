@@ -1,30 +1,16 @@
 import { ElementHandle, Page } from "puppeteer";
-import puppeteerService from "../../../../core/puppeteer/services/puppeteer/puppeteer.service.js";
 import { Media } from "../../types/darki-world.types.js";
-import darkiWorldMediaTypeService from "../darki-world-media-type/darki-world-media-type.service.js";
+import darkiWorldMediaTypeService from "../../services/darki-world-media-type/darki-world-media-type.service.js";
 import elementService from "../../../../shared/element/services/element/element.service.js";
-import darkiWorldMediaService from "../darki-world-media/darki-world-media.service.js";
 
-class DarkiWorldHandlerService {
-  private readonly siteUrl = "https://darkiworld.org/";
-  private pageInstance?: Page;
+class DarkiWorldSearchResultHandlerService {
+  private readonly mediasTypeContainerElementSelector =
+    ".content-grid-portrait";
 
-  private async getPageInstance(): Promise<Page> {
-    if (this.pageInstance) {
-      return this.pageInstance;
-    }
-
-    const { siteUrl } = this;
-
-    const page = await puppeteerService.openWebSite(siteUrl);
-    this.pageInstance = page;
-
-    return page;
-  }
-
-  async searchMediasTitles(searchQuery: string): Promise<string[]> {
-    const page = await this.getPageInstance();
-
+  async getSearchMediasResult(
+    searchQuery: string,
+    page: Page
+  ): Promise<Media[][]> {
     //Récupération de l'input de recherche dans la apge
     const searchInputQueryPathSelector = ".items-center input";
     const searchInputElement = await page.locator(searchInputQueryPathSelector);
@@ -41,14 +27,8 @@ class DarkiWorldHandlerService {
       visible: true,
     });
 
-    const medias = (await this.getMediasInSearchPageResult()) ?? [];
-    console.log(medias);
-
-    const flatMedias = medias.flatMap((mediasByMediaType) => mediasByMediaType);
-
-    const mediasTitles =
-      darkiWorldMediaService.mapMediasToMediaTitle(flatMedias);
-    return mediasTitles ?? [];
+    const medias = (await this.getMediasInSearchPageResult(page)) ?? [];
+    return medias;
   }
 
   //TODO
@@ -56,8 +36,9 @@ class DarkiWorldHandlerService {
     return true;
   }
 
-  private async getMediasInSearchPageResult(): Promise<Media[][] | undefined> {
-    const page = await this.getPageInstance();
+  private async getMediasInSearchPageResult(
+    page: Page
+  ): Promise<Media[][] | undefined> {
     if (!this.isPageOnSearchResultPage()) {
       return;
     }
@@ -86,17 +67,20 @@ class DarkiWorldHandlerService {
           mediaTypeElementHandle
         );
 
-      const mediaTitles = await this.getTitlesOfMediaElement(
+      const mediaTitlesAndUrl = await this.getTitlesAndUrlOfMediaElement(
         mediaTypeElementHandle
       );
-      if (!mediaTitles) {
+      if (!mediaTitlesAndUrl) {
         return;
       }
 
-      const mediasOfMediaType: Media[] = mediaTitles.map((mediaTitle) => ({
-        title: mediaTitle,
-        type: mediaType,
-      }));
+      const mediasOfMediaType: Media[] = mediaTitlesAndUrl.map(
+        ([title, url]) => ({
+          title,
+          type: mediaType,
+          url,
+        })
+      );
 
       medias.push(mediasOfMediaType);
     }
@@ -104,9 +88,9 @@ class DarkiWorldHandlerService {
     return medias;
   }
 
-  async getTitlesOfMediaElement(
+  private async getTitlesAndUrlOfMediaElement(
     mediaTypeElementHandle: ElementHandle<HTMLHeadingElement>
-  ): Promise<string[] | undefined> {
+  ): Promise<string[][] | undefined> {
     const mediaTypeElementHandleNode = mediaTypeElementHandle.asElement();
     if (!mediaTypeElementHandleNode) {
       return;
@@ -130,21 +114,42 @@ class DarkiWorldHandlerService {
     //   return;
     // }
 
-    const mediasElementsSelector = ".content-grid-portrait .text-sm a";
+    const mediaTitlesAndUrls = await this.getMediasTitlesAndUrl(
+      containerOfMediaType
+    );
+
+    return mediaTitlesAndUrls;
+  }
+
+  /**
+   *
+   * @param containerOfMediaType
+   * @returns [[title: string, url: string]]
+   */
+  private async getMediasTitlesAndUrl(
+    containerOfMediaType: ElementHandle<Node>
+  ): Promise<string[][]> {
+    const { mediasTypeContainerElementSelector } = this;
+
+    const mediasTitlesElementsSelector = `${mediasTypeContainerElementSelector} .text-sm a`;
     const mediaTitlesElementsHandles = await containerOfMediaType.$$(
-      mediasElementsSelector
+      mediasTitlesElementsSelector
     );
 
-    const mediaTitles = await Promise.all(
-      mediaTitlesElementsHandles.map(
-        async (mediaTitleElementHandle) =>
-          await elementService.getElementHandleInnerHTMlValue(
-            mediaTitleElementHandle
-          )
-      )
+    const mediaTitlesAndUrls = await Promise.all(
+      mediaTitlesElementsHandles.map(async (mediaTitleElementHandle) => {
+        const title = await elementService.getElementHandleInnerHTMlValue(
+          mediaTitleElementHandle
+        );
+        const url = await elementService.getElementHandleHrefValue(
+          mediaTitleElementHandle
+        );
+
+        return [title, url];
+      })
     );
 
-    return mediaTitles;
+    return mediaTitlesAndUrls;
   }
 }
-export default new DarkiWorldHandlerService();
+export default new DarkiWorldSearchResultHandlerService();
