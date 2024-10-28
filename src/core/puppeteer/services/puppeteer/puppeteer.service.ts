@@ -2,15 +2,19 @@ import puppeteer, { Browser, ElementHandle, Locator, Page } from "puppeteer";
 
 class Puppeteer {
   private browser?: Browser;
+  private debugMode = true;
 
   async getBrowserInstance(): Promise<Browser> {
     if (this.browser) return this.browser;
 
+    const { debugMode } = this;
+
     const browser = await puppeteer.launch({
-      headless: true,
+      headless: !debugMode,
       args: ["--no-sandbox"],
       ignoreDefaultArgs: ["--disable-extensions"],
       timeout: 0,
+      slowMo: debugMode ? 50 : undefined,
     });
     this.browser = browser;
 
