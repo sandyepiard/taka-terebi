@@ -1,4 +1,4 @@
-import { Locator } from "puppeteer";
+export const darkiWorldSiteUrl = "https://darkiworld.org/";
 
 export const mediaTypes = [
   "Série",

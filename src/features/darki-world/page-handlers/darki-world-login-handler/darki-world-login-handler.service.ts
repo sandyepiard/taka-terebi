@@ -1,7 +1,11 @@
 import { Page } from "puppeteer";
 import darkiWorldSearchResultHandlerService from "../darki-world-search-result-handler/darki-world-search-result-handler.service.js";
+import puppeteerService from "../../../../core/puppeteer/services/puppeteer/puppeteer.service.js";
+import { darkiWorldSiteUrl } from "../../types/darki-world.types.js";
 
 class DarkiWorldLoginHandlerService {
+  private readonly loginPageUrl = `${darkiWorldSiteUrl}login`;
+
   async isLogged(page: Page): Promise<boolean> {
     if (this.isOnLoginPage(page)) {
       return false;
@@ -24,24 +28,31 @@ class DarkiWorldLoginHandlerService {
     return url.includes("login");
   }
 
+  private openLoginPage(): Promise<Page> {
+    const { loginPageUrl } = this;
+
+    return puppeteerService.openWebSite(loginPageUrl);
+  }
+
   async login(page: Page): Promise<void> {
+    let loginPage = page;
     if (!this.isOnLoginPage(page)) {
-      //TODO: do something
+      loginPage = await this.openLoginPage();
     }
     //TODO: cas où on a pas de page en parametre
 
-    this.isLogged(page);
-
     //Saisie de l'email dans le champ
     const emailInputElementSelector = 'input[name="email"]';
-    const emailInputElement = await page.locator(emailInputElementSelector);
+    const emailInputElement = await loginPage.locator(
+      emailInputElementSelector
+    );
 
     const emailInputElementAsInput = await emailInputElement.waitHandle();
     await emailInputElementAsInput.type("tokutatsumoto@gmail.com");
 
     //Saisie du mdp dans le champ
     const passwordInputElementSelector = 'input[name="password"]';
-    const passwordInputElement = await page.locator(
+    const passwordInputElement = await loginPage.locator(
       passwordInputElementSelector
     );
 
@@ -49,7 +60,7 @@ class DarkiWorldLoginHandlerService {
     await passwordInputElementAsInput.type("QVD#KY$$zKwYTbFe^wt2");
 
     const submitBtnElementSelector = 'button[type="submit"]';
-    const submitBtnElement = await page.locator(submitBtnElementSelector);
+    const submitBtnElement = await loginPage.locator(submitBtnElementSelector);
 
     const submitBtnElementAsButton = await submitBtnElement.waitHandle();
     await submitBtnElementAsButton.click();
@@ -57,11 +68,9 @@ class DarkiWorldLoginHandlerService {
     const { searchInputQueryPathSelector } =
       darkiWorldSearchResultHandlerService;
     //On vérifie que la page à fini de s'afficher
-    await page.waitForSelector(searchInputQueryPathSelector, {
+    await loginPage.waitForSelector(searchInputQueryPathSelector, {
       visible: true,
     });
-
-    this.isLogged(page);
   }
 }
 export default new DarkiWorldLoginHandlerService();
