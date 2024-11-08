@@ -6,8 +6,15 @@ import { darkiWorldSiteUrl } from "../../types/darki-world.types.js";
 class DarkiWorldLoginHandlerService {
   private readonly loginPageUrl = `${darkiWorldSiteUrl}login`;
 
+  private readonly emailInputElementSelector = 'input[name="email"]';
+
+  /**
+   * @deprecated: ne mearche pas correctement
+   * @param page
+   * @returns
+   */
   async isLogged(page: Page): Promise<boolean> {
-    if (this.isOnLoginPage(page)) {
+    if (await this.isOnLoginPage(page)) {
       return false;
     }
 
@@ -17,15 +24,22 @@ class DarkiWorldLoginHandlerService {
       return !loginBtnElement;
     });
 
-    console.log(isLogged);
-
     return isLogged;
   }
 
-  isOnLoginPage(page: Page): boolean {
+  async isOnLoginPage(page: Page): Promise<boolean> {
     const url = page.url();
 
-    return url.includes("login");
+    const isOnLoginPage = url.includes("login");
+    if (!isOnLoginPage) {
+      return false;
+    }
+
+    await page.waitForSelector(this.emailInputElementSelector, {
+      visible: true,
+    });
+
+    return true;
   }
 
   private openLoginPage(): Promise<Page> {
@@ -36,15 +50,18 @@ class DarkiWorldLoginHandlerService {
 
   async login(page: Page): Promise<void> {
     let loginPage = page;
-    if (!this.isOnLoginPage(page)) {
+    if (!(await this.isOnLoginPage(page))) {
       loginPage = await this.openLoginPage();
     }
     //TODO: cas où on a pas de page en parametre
 
     //Saisie de l'email dans le champ
-    const emailInputElementSelector = 'input[name="email"]';
+    await loginPage.waitForSelector(this.emailInputElementSelector, {
+      visible: true,
+    });
+
     const emailInputElement = await loginPage.locator(
-      emailInputElementSelector
+      this.emailInputElementSelector
     );
 
     const emailInputElementAsInput = await emailInputElement.waitHandle();
@@ -71,6 +88,8 @@ class DarkiWorldLoginHandlerService {
     await loginPage.waitForSelector(searchInputQueryPathSelector, {
       visible: true,
     });
+
+    // loginPage.close();
   }
 }
 export default new DarkiWorldLoginHandlerService();

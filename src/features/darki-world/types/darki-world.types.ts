@@ -22,3 +22,13 @@ export type MediasByTypes = {
 };
 
 export interface MediaInfos {}
+
+export interface MediaDownloadLink {
+  size: string;
+  quality: string; //TODO: à typé
+  voiceLanguages: string[]; //TODO: à typé
+  subtitlesLanguages: string[]; //TODO: à typé
+  creationDate: string;
+  downloadLink: string;
+  nfo: string;
+}

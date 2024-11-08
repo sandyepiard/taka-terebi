@@ -2,7 +2,7 @@ import puppeteer, { Browser, ElementHandle, Locator, Page } from "puppeteer";
 
 class Puppeteer {
   private browser?: Browser;
-  private debugMode = true;
+  private debugMode = false;
 
   async getBrowserInstance(): Promise<Browser> {
     if (this.browser) return this.browser;
@@ -10,11 +10,18 @@ class Puppeteer {
     const { debugMode } = this;
 
     const browser = await puppeteer.launch({
+      executablePath:
+        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
       headless: !debugMode,
-      args: ["--no-sandbox"],
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-web-security",
+        "--disable-features=IsolateOrigins,site-per-process,SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure",
+      ],
       ignoreDefaultArgs: ["--disable-extensions"],
       timeout: 0,
-      slowMo: debugMode ? 50 : undefined,
+      slowMo: debugMode ? 1 : undefined,
     });
     this.browser = browser;
 

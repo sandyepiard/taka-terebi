@@ -4,6 +4,7 @@ import darkiWorldMediaTypeService from "../../services/darki-world-media-type/da
 import elementService from "../../../../shared/element/services/element/element.service.js";
 
 class DarkiWorldSearchResultHandlerService {
+  readonly searchInputQueryPathSelector = ".items-center input";
   private readonly mediasTypeContainerElementSelector =
     ".content-grid-portrait";
 
@@ -11,8 +12,9 @@ class DarkiWorldSearchResultHandlerService {
     searchQuery: string,
     page: Page
   ): Promise<MediasByTypes> {
-    //Récupération de l'input de recherche dans la apge
-    const searchInputQueryPathSelector = ".items-center input";
+    const { searchInputQueryPathSelector } = this;
+
+    //Récupération de l'input de recherche dans la page
     const searchInputElement = await page.locator(searchInputQueryPathSelector);
 
     //On convertit l'input locator en element handle pour pouvoir écrire dans l'input et

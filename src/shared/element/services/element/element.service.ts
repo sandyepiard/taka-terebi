@@ -1,6 +1,11 @@
 import { ElementHandle } from "puppeteer";
 
 class ElementService {
+  /**
+   * @deprecated
+   * @param elementHandle
+   * @returns
+   */
   async getElementHandleInnerHTMlValue(
     elementHandle: ElementHandle<any>
   ): Promise<string> {
@@ -10,6 +15,11 @@ class ElementService {
     return innerHTMLAsJSHandleAsStr;
   }
 
+  /**
+   * @deprecated
+   * @param elementHandle
+   * @returns
+   */
   async getElementHandleHrefValue(
     elementHandle: ElementHandle<any>
   ): Promise<string> {
@@ -17,6 +27,16 @@ class ElementService {
 
     const hrefAsJSHandleAsStr = await hrefAsJSHandle.jsonValue();
     return hrefAsJSHandleAsStr;
+  }
+
+  async getElementHandlePropertyValue(
+    propertyName: string,
+    elementHandle: ElementHandle<any>
+  ): Promise<any> {
+    const propertyAsJSHandle = await elementHandle.getProperty(propertyName);
+
+    const propertyAsJSHandleValue = await propertyAsJSHandle.jsonValue();
+    return propertyAsJSHandleValue;
   }
 
   async searchParentElementNodeWithCssSelector(

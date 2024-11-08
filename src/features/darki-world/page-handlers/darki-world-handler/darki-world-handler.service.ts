@@ -3,14 +3,16 @@ import puppeteerService from "../../../../core/puppeteer/services/puppeteer/pupp
 import darkiWorldSearchResultHandlerService from "../darki-world-search-result-handler/darki-world-search-result-handler.service.js";
 import darkiWorldMediaService from "../../services/darki-world-media/darki-world-media.service.js";
 import {
+  darkiWorldSiteUrl,
   Media,
   MediaInfos,
   MediasByTypes,
 } from "../../types/darki-world.types.js";
 import darkiWorldMediaHandlerService from "../darki-world-media-handler/darki-world-media-handler.service.js";
+import darkiWorldLoginHandlerService from "../darki-world-login-handler/darki-world-login-handler.service.js";
 
 class DarkiWorldHandlerService {
-  private readonly siteUrl = "https://darkiworld.org/";
+  private readonly siteUrl = darkiWorldSiteUrl;
   private pageInstance?: Page;
 
   private async getPageInstance(): Promise<Page> {
@@ -35,6 +37,8 @@ class DarkiWorldHandlerService {
         page
       );
 
+    page.close();
+
     return medias;
   }
 
@@ -50,7 +54,9 @@ class DarkiWorldHandlerService {
     return mediasTitles ?? [];
   }
 
-  async getAvailableDownloadInfosOfMedia(media: Media): Promise<MediaInfos> {
+  async getAvailableDownloadInfosOfMedia(
+    media: Media
+  ): Promise<MediaInfos | undefined> {
     const mediaInfos = await darkiWorldMediaHandlerService.getPageMediaInfos(
       media
     );
