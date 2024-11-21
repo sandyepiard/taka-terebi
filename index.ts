@@ -1,8 +1,13 @@
 import puppeteerService from "./src/core/puppeteer/services/puppeteer/puppeteer.service.js";
-import digimonFandomHandlerService from "./src/features/digimon-fandom/page-handlers/digimon-fandom-handler/digimon-fandom-handler.service.js";
+import digivolutionSimulatorService from "./src/features/digimon-fandom/services/digivolution-simulator/digivolution-simulator.service.js";
 
-const freshLevelDigimons =
-  await digimonFandomHandlerService.getFreshLevelDigimons();
-console.log(freshLevelDigimons);
+// const levels = await digimonFandomLevelHandlerService.getLevels();
+// console.log(levels);
+const newDigimon = await digivolutionSimulatorService.getNewDigimon();
+// console.log(newFreshLevelBaseDigimon);
+
+while (newDigimon && !!newDigimon.currForm.nextForms.length) {
+  await digivolutionSimulatorService.setDigimonToNextDigivolution(newDigimon);
+}
 
 await puppeteerService.closeBrowser();

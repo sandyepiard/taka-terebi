@@ -1,12 +1,45 @@
-import { ElementHandle, Page } from "puppeteer";
 import elementService from "../../../../shared/element/services/element/element.service.js";
-import { BaseDigimon } from "../../types/digimon-fandom.types.js";
 import puppeteerService from "../../../../core/puppeteer/services/puppeteer/puppeteer.service.js";
+import { ElementHandle } from "puppeteer";
+import {
+  BaseDigimon,
+  digimonFandomBaseSiteUrl,
+} from "../../types/digimon-fandom.types.js";
 
-class DigimonFandomFreshLevelHandlerService {
-  async getFreshLevelDigimons(): Promise<BaseDigimon[]> {
+class DigimonFandomLevelHandlerService {
+  async getLevels(): Promise<string[]> {
     const page = await puppeteerService.openWebSite(
-      "https://digimon.fandom.com/wiki/Category:Fresh_level"
+      `${digimonFandomBaseSiteUrl}/Category:Species_by_level`
+    );
+
+    const levelsElementsSelector = "a.category-page__member-link";
+    await page.waitForSelector(levelsElementsSelector, {
+      visible: true,
+    });
+
+    const levelsElementsHandle = await page.$$(levelsElementsSelector);
+
+    const levels = await Promise.all(
+      levelsElementsHandle.map(async (levelElementHandle) => {
+        const nameInHref = (await elementService.getElementHandlePropertyValue(
+          "href",
+          levelElementHandle
+        )) as string;
+
+        const splitedNameInHref = nameInHref.split("Category:");
+
+        return splitedNameInHref[splitedNameInHref.length - 1];
+      })
+    );
+
+    page.close();
+
+    return levels;
+  }
+
+  async getBaseDigimonsByLevel(level: string): Promise<BaseDigimon[]> {
+    const page = await puppeteerService.openWebSite(
+      `https://digimon.fandom.com/wiki/Category:${level}`
     );
 
     const digimonsElementsSelector = "li.category-page__member";
@@ -22,6 +55,8 @@ class DigimonFandomFreshLevelHandlerService {
           await this.getDigimonBaseData(digimonElementHandle)
       )
     );
+
+    page.close();
 
     return baseDigimons.filter((baseDigimon) => !!baseDigimon);
   }
@@ -65,4 +100,4 @@ class DigimonFandomFreshLevelHandlerService {
     };
   }
 }
-export default new DigimonFandomFreshLevelHandlerService();
+export default new DigimonFandomLevelHandlerService();

@@ -4,7 +4,6 @@ import {
   BaseDigimon,
   digimonFandomSiteUrl,
 } from "../../types/digimon-fandom.types.js";
-import digimonFandomFreshLevelHandlerService from "../digimon-fandom-fresh-level-handler/digimon-fandom-fresh-level-handler.service.js";
 
 class DigimonFandomHandlerService {
   private readonly siteUrl = digimonFandomSiteUrl;
@@ -21,17 +20,6 @@ class DigimonFandomHandlerService {
     this.pageInstance = page;
 
     return page;
-  }
-
-  async getFreshLevelDigimons(): Promise<BaseDigimon[]> {
-    const page = await this.getPageInstance();
-
-    const baseDigimons =
-      await digimonFandomFreshLevelHandlerService.getFreshLevelDigimons();
-
-    page.close();
-
-    return baseDigimons;
   }
 }
 export default new DigimonFandomHandlerService();
