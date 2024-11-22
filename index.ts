@@ -1,13 +1,61 @@
 import puppeteerService from "./src/core/puppeteer/services/puppeteer/puppeteer.service.js";
 import digivolutionSimulatorService from "./src/features/digimon-fandom/services/digivolution-simulator/digivolution-simulator.service.js";
+import express from "express";
+import cors, { CorsRequest } from "cors";
+import axios from "axios";
+import bodyParser from "body-parser";
+import digimonRouter from "./src/features/digimon-fandom/routers/digimon.router.js";
+import imageRouter from "./src/shared/image/routers/image.router.js";
 
-// const levels = await digimonFandomLevelHandlerService.getLevels();
-// console.log(levels);
-const newDigimon = await digivolutionSimulatorService.getNewDigimon();
-// console.log(newFreshLevelBaseDigimon);
+const app = express();
+const port = 3000;
 
-while (newDigimon && !!newDigimon.currForm.nextForms.length) {
-  await digivolutionSimulatorService.setDigimonToNextDigivolution(newDigimon);
-}
+const jsonParser = bodyParser.json();
 
-await puppeteerService.closeBrowser();
+// const corsOptions = {
+//   origin: "http://localhost:4200/",
+//   credentials: true,
+//   optionsSuccessStatus: 200,
+// };
+
+// const whitelist = ["http://localhost:4200"];
+
+// const corsOptionsDelegate = (req: CorsRequest, callback: Function) => {
+//   console.log(1);
+//   const origin = req.headers.origin ?? "";
+//   const isOriginInWhiteList = whitelist.indexOf(origin) !== -1;
+
+//   const corsOptions = isOriginInWhiteList
+//     ? { origin: true }
+//     : { origin: false };
+
+//   callback(null, corsOptions); // callback expects two parameters: error and options
+// };
+
+// app.use(cors(corsOptionsDelegate));
+
+// app.use(
+//   cors({
+//     origin: "http://localhost:4200",
+//     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+//     allowedHeaders: [
+//       "Content-Type",
+//       "Authorization",
+//       "Origin",
+//       "x-access-token",
+//       "XSRF-TOKEN",
+//     ],
+//     preflightContinue: false,
+//   })
+// );
+
+const router = express.Router();
+
+router.use(digimonRouter);
+router.use(imageRouter);
+
+app.use("/api", jsonParser, router);
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
