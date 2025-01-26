@@ -1,11 +1,10 @@
-import puppeteerService from "./src/core/puppeteer/services/puppeteer/puppeteer.service.js";
-import digivolutionSimulatorService from "./src/features/digimon-fandom/services/digivolution-simulator/digivolution-simulator.service.js";
 import express from "express";
 import cors, { CorsRequest } from "cors";
 import axios from "axios";
 import bodyParser from "body-parser";
 import digimonRouter from "./src/features/digimon-fandom/routers/digimon.router.js";
 import imageRouter from "./src/shared/image/routers/image.router.js";
+import khinsiderRouter from "./src/features/khinsider/routers/khinsider.router.js";
 
 const app = express();
 const port = 3000;
@@ -52,6 +51,7 @@ const jsonParser = bodyParser.json();
 const router = express.Router();
 
 router.use(digimonRouter);
+router.use(khinsiderRouter);
 router.use(imageRouter);
 
 app.use("/api", jsonParser, router);
